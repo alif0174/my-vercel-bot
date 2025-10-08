@@ -1615,9 +1615,5 @@ def create_application():
 
 # bot_core.py এর শেষে এখন আর কোনো app = ... লাইন থাকবে না।
 
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler(["show_users","see_details","ban","unban","add_balance","deduct_balance","add_pending","deduct_pending","add_main","deduct_main","withdraw", "reject_withdraw", "message", "stop", "start_task", "disable_payment_method", "enable_payment_method", "show_payment_methods", "sendto", "approve", "reject", "update_alternative_price"], admin_command))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-app.add_handler(CallbackQueryHandler(button_handler))
 
 
