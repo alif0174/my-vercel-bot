@@ -1,34 +1,46 @@
-# api/webhook.py
+import sys
+# এই লাইনটি বর্তমান ডিরেক্টরি (api ফোল্ডার) কে সার্চ পাথে যোগ করবে
+sys.path.append('.') 
 
+import os
 import json
-from http.server import BaseHTTPRequestHandler
+import logging
 from telegram import Update
-from bot_core import app 
+from telegram.ext import ApplicationBuilder, Application
+from bot_core import app # <--- এখন bot_core থেকে 'app' খুঁজে পাবে
 
-class handler(BaseHTTPRequestHandler):
-    
-    def do_POST(self):
-        try:
-            content_length = int(self.headers['Content-Length'])
-            post_data = self.rfile.read(content_length)
-            
-            update_data = json.loads(post_data)
-            update = Update.de_json(update_data, app.bot)
-            
-            app.update_queue.put(update)
-            
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({"status": "ok"}).encode('utf-8'))
-            
-        except Exception as e:
-            self.send_response(500)
-            self.end_headers()
-            self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode('utf-8'))
-            
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/plain')
-        self.end_headers()
-        self.wfile.write("Telegram Bot Webhook is running.".encode('utf-8'))
+# Vercel Environment Variables
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "8028816575:AAGhh5zxgLM2vVczlhqq6K0I-n7tMtnJprs")
+
+# Vercel-এর জন্য মূল হ্যান্ডলার ফাংশন
+def handler(event, context):
+    try:
+        # Vercel ইভেন্ট থেকে HTTP বডি পাওয়া
+        body = json.loads(event['body'])
+        
+        # টেলিগ্রামের জন্য আপডেট অবজেক্ট তৈরি করা
+        update = Update.de_json(body, app.bot)
+        
+        # Application.update_queue-তে আপডেট যোগ করা (এটি অ্যাপ্লিকেশনকে মেসেজ প্রক্রিয়া করতে সাহায্য করে)
+        app.update_queue.put(update)
+
+        # মেসেজ প্রসেস করা 
+        # Application.process_update(update) ব্যবহার করা এখন আর প্রয়োজন নেই, 
+        # কারণ ApplicationBuilder().build()-এর পরিবর্তে Application.builder().updater().build() 
+        # ব্যবহার না করলে এটি স্বয়ংক্রিয়ভাবে কাজ করে না। 
+        # Vercel এ এটিই সবচেয়ে সহজ तरीका।
+
+        return {
+            'statusCode': 200,
+            'body': 'ok'
+        }
+
+    except Exception as e:
+        # কোনো এরর হলে সেটি লগ করা 
+        logging.error(f"Error processing update: {e}", exc_info=True)
+        # 500 এরর যাতে না আসে, তাই 200 (ok) পাঠানো হচ্ছে, কিন্তু Vercel লগ দেখাবে।
+        return {
+            'statusCode': 200,
+            'body': json.dumps({'error': str(e)})
+        }
+
