@@ -1596,7 +1596,25 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ---
 # অ্যাপ্লিকেশন বিল্ডার এবং হ্যান্ডলার রেজিস্ট্রেশন
 # ---
-app = ApplicationBuilder().token(TOKEN).build()
+# ... (আপনার সব হ্যান্ডলার ফাংশন এবং ডেটা লোড করার লজিক)
+# ...
+
+# নতুন ফাংশন: এটি Application অবজেক্ট তৈরি করে রিটার্ন করবে
+def create_application():
+    """ApplicationBuilder ব্যবহার করে Application অবজেক্ট তৈরি করে"""
+    
+    # আপনার Token এখানে ব্যবহার করুন
+    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build() 
+    
+    # সব হ্যান্ডলার যোগ করুন
+    application.add_handler(CommandHandler("start", start_command))
+    application.add_handler(CommandHandler("get_data", get_data_command))
+    # ... আপনার বাকি সব add_handler লাইনগুলো এখানে রাখুন
+
+    return application
+
+# bot_core.py এর শেষে এখন আর কোনো app = ... লাইন থাকবে না।
+
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler(["show_users","see_details","ban","unban","add_balance","deduct_balance","add_pending","deduct_pending","add_main","deduct_main","withdraw", "reject_withdraw", "message", "stop", "start_task", "disable_payment_method", "enable_payment_method", "show_payment_methods", "sendto", "approve", "reject", "update_alternative_price"], admin_command))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
