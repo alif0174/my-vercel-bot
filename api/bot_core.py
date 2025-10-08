@@ -15,7 +15,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 daily_pwd = f"JWKzRqgz{datetime.datetime.now().day}"
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "8028816575:AAGhh5zxgLM2vVczlhqq6K0I-n7tMtnJprs")
 ADMIN_IDS = [1712462578, 5019082603]
-DATA_FILE = 'bot_data.json'
+DATA_FILE = 'api/bot_data.json'
 MIN_WITHDRAW_AMOUNT = 100
 # পরিবর্তন: উইথড্র ফি ফিক্সড ৬ টাকা
 WITHDRAWAL_FIXED_FEE = 6
@@ -35,7 +35,7 @@ ALTERNATIVE_GMAIL_AMOUNTS = [30, 50, 70, 100, 200, 300, 400, 500]
 # ---
 # Google Sheets API কনফিগারেশন
 # ---
-CREDENTIALS_FILE = 'credentials.json'
+CREDENTIALS_FILE = 'api/credentials.json'
 GOOGLE_SHEET_NAME = "Telegram bot"
 USER_INFO_SHEET_NAME = "User Info"
 # নতুন: প্রতিটি টাস্কের জন্য আলাদা শীটের নাম
