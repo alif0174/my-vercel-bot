@@ -1,3 +1,10 @@
+# ...
+# Line 31-এ পরিবর্তন:
+DATA_FILE = 'api/bot_data.json' # নিশ্চিত করুন যে আপনার ফাইলটি api ফোল্ডারে আছে
+# ...
+# Line 54-এ পরিবর্তন:
+CREDENTIALS_FILE = 'api/credentials.json' # নিশ্চিত করুন যে আপনার ফাইলটি api ফোল্ডারে আছে
+# ...
 import json
 import random
 import string
