@@ -5,6 +5,7 @@ DATA_FILE = 'api/bot_data.json' # নিশ্চিত করুন যে আ�
 # Line 54-এ পরিবর্তন:
 CREDENTIALS_FILE = 'api/credentials.json' # নিশ্চিত করুন যে আপনার ফাইলটি api ফোল্ডারে আছে
 # ...
+from telegram.ext import Application, ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, filters
 import json
 import random
 import string
