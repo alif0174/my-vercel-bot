@@ -2,41 +2,46 @@ import sys
 import os
 
 # API ফোল্ডারকে সার্চ পাথে যোগ করা
-# Vercel-এ root ডিরেক্টরি /var/task থেকে শুরু হয়।
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.append(os.path.dirname(__file__)) # এই লাইনটি api ফোল্ডারকে যোগ করে।
+# এটি ModuleNotFoundError এর সমস্যা সমাধান করবে
+sys.path.append(os.path.dirname(__file__))
 
 import json
 import logging
 from telegram import Update
-from telegram.ext import ApplicationBuilder, Application
 
-# এখানে শুধু মডিউলের নাম ব্যবহার করুন, কারণ sys.path-এ api ফোল্ডার যুক্ত করা হয়েছে।
-# কিন্তু ModuleNotFoundError এড়াতে আমরা try-except ব্লক ব্যবহার করব:
-
-try:
-    from bot_core import app 
-except ModuleNotFoundError:
-    # যদি আগের ইম্পোর্ট কাজ না করে, তবে ফোল্ডারের নাম যোগ করে চেষ্টা করা হবে
-    from api.bot_core import app 
+# ERROR: issubclass() এড়াতে telegram.ext থেকে ApplicationBuilder বা Application ইম্পোর্ট করা হচ্ছে না 
+# কারণ Vercel শুধু handler ফাংশন এক্সপেক্ট করে।
 
 # Vercel Environment Variables
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "8028816575:AAGhh5zxgLM2vVczlhqq6K0I-n7tMtnJprs")
-# 
-# বাকি সব একই থাকবে, শুধু লগিং লেভেল INFO তে সেট করা হলো যাতে ডিবাগিং সহজ হয়।
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# bot_core থেকে 'app' ভেরিয়েবল ইম্পোর্ট করা হলো।
+# যদি ইম্পোর্টে এরর আসে, তবে Vercel রানটাইম লগ দেখাবে।
+from bot_core import app 
 
 
-# Vercel-এর জন্য মূল হ্যান্ডলার ফাংশন
-def handler(event, context):
+# Vercel-এর জন্য মূল হ্যান্ডলার ফাংশন (এই ফাংশনটি Vercel নিজে খুঁজে নেয়)
+# এটিই একমাত্র গ্লোবাল ভেরিয়েবল যা Vercel আশা করে না যে এটি কোনো ক্লাস হবে।
+def handler(request):
     try:
-        # Vercel ইভেন্ট থেকে HTTP বডি পাওয়া
-        body = json.loads(event['body'])
+        # অনুরোধের (request) body থেকে JSON ডেটা পাওয়া
+        # Vercel request object ব্যবহার করা হচ্ছে, তাই event['body'] এর পরিবর্তে সরাসরি request.json() ব্যবহার করুন।
         
+        # NOTE: Vercel এর সার্ভারলেস Python হ্যান্ডলারটি সাধারণত 
+        # (event, context) ডিকশনারি গ্রহণ করে, কিন্তু কিছু ক্ষেত্রে request অবজেক্ট ব্যবহার করা যেতে পারে।
+        
+        # আমরা (event, context) মডেলটিকেই ব্যবহার করব, যা আগের কোডে ছিল,
+        # যাতে নিশ্চিত হয় এটি Vercel এর স্ট্যান্ডার্ড অনুযায়ী চলে।
+
+        # তাই, আমরা ধরে নিচ্ছি Vercel আপনার কোডটিকে আগের মতোই (event, context) মডেল দিয়ে কল করবে।
+
+        if request.get('body'):
+            body = json.loads(request['body'])
+        else:
+            return {'statusCode': 400, 'body': 'No body provided'}
+
         # টেলিগ্রামের জন্য আপডেট অবজেক্ট তৈরি করা
         update = Update.de_json(body, app.bot)
         
-        # Application.update_queue-তে আপডেট যোগ করা
+        # Application.update_queue-তে আপডেট যোগ করা 
         app.update_queue.put(update)
 
         return {
@@ -45,8 +50,10 @@ def handler(event, context):
         }
 
     except Exception as e:
+        # কোনো এরর হলে সেটি লগ করা
+        logging.basicConfig(level=logging.ERROR)
         logging.error(f"Error processing update: {e}", exc_info=True)
-        # 500 এরর যাতে না আসে, তাই 200 (ok) পাঠানো হচ্ছে।
+        # 500 এরর এড়াতে 200 (ok) পাঠানো হচ্ছে, যাতে টেলিগ্রাম চেষ্টা বন্ধ না করে।
         return {
             'statusCode': 200,
             'body': json.dumps({'error': str(e)})
