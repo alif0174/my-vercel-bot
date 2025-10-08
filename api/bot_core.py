@@ -21,7 +21,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 # সাধারণ সেটিংস
 # ---
 daily_pwd = f"JWKzRqgz{datetime.datetime.now().day}"
-TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "8028816575:AAGhh5zxgLM2vVczlhqq6K0I-n7tMtnJprs")
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "8028816575:AAGhh5zxgLM2vVczlhqq6K0I-n7tMtnJprs")
 ADMIN_IDS = [1712462578, 5019082603]
 DATA_FILE = 'api/bot_data.json'
 MIN_WITHDRAW_AMOUNT = 100
